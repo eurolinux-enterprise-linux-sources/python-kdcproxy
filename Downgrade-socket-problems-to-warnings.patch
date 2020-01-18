@@ -1,0 +1,45 @@
+From ea304c819659a8f54d9545eff9af262898a3193a Mon Sep 17 00:00:00 2001
+From: Robbie Harwood <rharwood@redhat.com>
+Date: Tue, 3 Jul 2018 15:04:28 -0400
+Subject: [PATCH] Downgrade socket problems to warnings
+
+Previously, these were logged at exception - which logs at ERROR and
+prints a traceback.  This led to two problems: first, that they're not
+kdcproxy errors (rather problems with the other end); and second, that
+the traceback is quite noisy.  Log a simplified version of the
+exception instead of the traceback.
+
+In the process, correct the sendall() error message to refer to
+sendall(), not recv().
+
+(cherry picked from commit 074fda5394b5ae201da1ceb6d61ad55f8557db50)
+---
+ kdcproxy/__init__.py | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/kdcproxy/__init__.py b/kdcproxy/__init__.py
+index 9fc1418..ab6ed8a 100644
+--- a/kdcproxy/__init__.py
++++ b/kdcproxy/__init__.py
+@@ -99,8 +99,8 @@ class Application:
+                     else:
+                         sock.sendall(pr.request)
+                         extra = 10  # New connections get 10 extra seconds
+-                except Exception:
+-                    logging.exception('Error in recv() of %s', sock)
++                except Exception as e:
++                    logging.warning("Conection broken while writing (%s)", e)
+                     continue
+                 rsocks.append(sock)
+                 wsocks.remove(sock)
+@@ -108,8 +108,8 @@ class Application:
+             for sock in r:
+                 try:
+                     reply = self.__handle_recv(sock, read_buffers)
+-                except Exception:
+-                    logging.exception('Error in recv() of %s', sock)
++                except Exception as e:
++                    logging.warning("Connection broken while reading (%s)", e)
+                     if self.sock_type(sock) == socket.SOCK_STREAM:
+                         # Remove broken TCP socket from readers
+                         rsocks.remove(sock)

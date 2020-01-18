@@ -2,7 +2,7 @@
 
 Name:           python-%{realname}
 Version:        0.3.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        MS-KKDCP (kerberos proxy) WSGI module
 
 License:        MIT
@@ -11,6 +11,8 @@ Source0:        https://github.com/npmccallum/%{realname}/archive/v%{version}.ta
 
 BuildArch:      noarch
 BuildRequires:  python2-devel
+
+Patch0: Downgrade-socket-problems-to-warnings.patch
 
 %if 0%{?rhel} == 0
 BuildRequires:  python-tox
@@ -52,6 +54,7 @@ minimal configuration.
 
 %prep
 %setup -q -n %{realname}-%{version}
+%patch0 -p1 -b .Downgrade-socket-problems-to-warnings
 
 %build
 %{__python} setup.py build
@@ -84,6 +87,10 @@ tox --sitepackages -e py27,py34
 %endif
 
 %changelog
+* Mon Dec 17 2018 Robbie Harwood <rharwood@redhat.com> - 0.3.2-2
+- Downgrade socket problems to warnings
+- Resolves: #1525925
+
 * Mon Aug 03 2015 Nathaniel McCallum <npmccallum@fedoraproject.org> - 0.3.2-1
 - Update to 0.3.2
 - Fixes CVE-2015-5159
